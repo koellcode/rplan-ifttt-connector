@@ -11,11 +11,42 @@ async function delay (time) {
   return new Promise((resolve) => setTimeout(resolve, time))
 }
 
+function triggerPoChanged (updatedPos) {
+  const [po] = updatedPos
+  notifyPoChanged(po.name)
+}
+
+function isViolatedProjectStart (userDefinedStart, calculatedStart) {
+  if (typeof calculatedStart === 'undefined') {
+    return false
+  }
+  return calculatedStart < userDefinedStart
+}
+
+function isViolatedProjectEnd (userDefinedDuration, calculatedDuration) {
+  if (typeof calculatedDuration === 'undefined') {
+    return false
+  }
+  return userDefinedDuration < calculatedDuration
+}
+
+function triggerProjectViolated (updatedPos) {
+  const [po] = updatedPos
+
+  if (po.isProject === true) {
+    if (isViolatedProjectStart(po.userDefinedStart, po.calculatedStart) || isViolatedProjectEnd(po.userDefinedDuration, po.calculatedDuration)) {
+      notifyProjectViolated(po.name)
+    }
+  }
+
+}
+
 async function main() {
   if (!checkUndefinedArguments(argv.user)) return
   if (!checkUndefinedArguments(argv.password)) return
   if (!checkUndefinedArguments(argv.register)) return
   if (!checkUndefinedArguments(argv.ifttt)) return
+  if (!checkUndefinedArguments(argv.trigger)) argv.trigger = 'PoChanged'
 
   const poId = argv.register
   console.log(`Start ifttt connector for planning object (poId: ${poId})`)
@@ -34,13 +65,16 @@ async function main() {
 
   while (true) {
     const pollingRes = await getUpdatedPos(pollingBody, sessionId)
-
     const updatedPos = await pollingRes.json()
+
     if (updatedPos.length === 1) {
       pollingBody[poId] = updatedPos[0].cas
 
-      console.log('Trigger ifttt...')
-      triggerPoChangedEvent(argv.ifttt, updatedPos[0].name)
+      if(argv.trigger === 'PoChanged') {
+        triggerPoChanged(updatedPos)
+      } else if (argv.trigger === 'ProjectViolated') {
+        triggerProjectViolated(updatedPos)
+      }
     }
 
     await delay(1000)
@@ -62,23 +96,44 @@ function getUpdatedPos(pollingBody, sessionId) {
   })
 }
 
-async function triggerPoChangedEvent(ifttt, name) {
-  const body = {
-    value1: name,
-  }
+
+function notifyPoChanged (name) {
   const options = {
+    eventName: 'poChanged',
+    value1: name
+  }
+
+  notifyIFTTT(argv.ifttt, options)
+}
+
+function notifyProjectViolated (name) {
+  const options = {
+    eventName: 'projectViolated',
+    value1: name
+  }
+
+  notifyIFTTT(argv.ifttt, options)
+}
+
+async function notifyIFTTT(token, options) {
+  const response = await fetch(`https://maker.ifttt.com/trigger/${options.eventName}/with/key/${token}`, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(body),
-  }
+    body: JSON.stringify({
+      value1: options.value1,
+      value2: options.value2,
+      value3: options.value3,
+    }),
+  })
 
-  const url = `https://maker.ifttt.com/trigger/poChanged/with/key/${ifttt}`
-  const response = await fetch(url, options)
   if(response.statusCode >= 200 || response.statusCode < 300) {
     console.log(`Sending event was not successful: "${await response.text()}"`)
-  } else console.log('Success!')
+  }
+  else {
+    console.log('Success! Notified IFTTT with ', options.eventName)
+  }
 }
 
 main()
