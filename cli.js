@@ -8,8 +8,8 @@ function checkUndefinedArguments(argument) {
   return true
 }
 
-async function delay (timer) {
-  return new Promise((resolve) => setTimeout(resolve, timer))
+async function delay (time) {
+  return new Promise((resolve) => setTimeout(resolve, time))
 }
 
 async function main() {
@@ -39,6 +39,8 @@ async function main() {
   const sessionId = pollingRes.headers.raw()['x-updates-session']
 
   while (true) {
+    console.log(`Poll for planning object update (poId: ${poId})`)
+
     const pollingRes = await fetch('http://localhost:8081/api/planning-objects/updates', {
       user: argv.user,
       password: argv.password,
@@ -49,8 +51,14 @@ async function main() {
         'x-updates-session': sessionId
       },
     })
+
+    const updatedPos = await pollingRes.json()
+    if (updatedPos.length === 1) {
+      pollingBody[poId] = updatedPos[0].cas
+      console.log('New cas:', updatedPos[0].cas)
+    }
+
     await delay(1000)
-    console.log(await pollingRes.json())
   }
 }
 
