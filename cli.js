@@ -19,6 +19,7 @@ async function main() {
   if (!checkUndefinedArguments(argv.ifttt)) return
   
   const poId = argv.register
+  console.log(`Start ifttt connector for planning object (poId: ${poId})`)
 
   const poRes = await fetch(`http://localhost:8081/api/planning-objects/${poId}`, {
     user: argv.user,
@@ -40,8 +41,6 @@ async function main() {
   const sessionId = pollingRes.headers.raw()['x-updates-session']
 
   while (true) {
-    console.log(`Poll for planning object update (poId: ${poId})`)
-
     const pollingRes = await fetch('http://localhost:8081/api/planning-objects/updates', {
       user: argv.user,
       password: argv.password,
@@ -56,15 +55,17 @@ async function main() {
     const updatedPos = await pollingRes.json()
     if (updatedPos.length === 1) {
       pollingBody[poId] = updatedPos[0].cas
-      console.log('New cas:', updatedPos[0].cas)
+
+      console.log('Trigger ifttt...')
+      await triggerPoChangedEvent(argv.ifttt, updatedPos[0].name)
     }
 
     await delay(1000)
   }
 }
 
-async function triggerPoChangedEvent(name) {
-  const param = {
+async function triggerPoChangedEvent(ifttt, name) {
+  const body = {
     value1: name,
   }
   const options = {
@@ -72,16 +73,14 @@ async function triggerPoChangedEvent(name) {
     headers: {
       'Content-Type': 'application/json',
     },
-    body: JSON.stringify(param),
+    body: JSON.stringify(body),
   }
 
-  const url = `https://maker.ifttt.com/trigger/poChanged/with/key/${argv.ifttt}`
+  const url = `https://maker.ifttt.com/trigger/poChanged/with/key/${ifttt}`
   const response = await fetch(url, options)
   if(response.statusCode >= 200 || response.statusCode < 300) {
-    console.log(`sending event was not successful: "${await response.text()}"`)
+    console.log(`Sending event was not successful: "${await response.text()}"`)
   } else console.log('Success!')
 }
 
-main().then(() => {
-  console.log('end')
-})
+main()
