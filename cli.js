@@ -8,11 +8,16 @@ function checkUndefinedArguments(argument) {
   return true
 }
 
+async function delay (timer) {
+  return new Promise((resolve) => setTimeout(resolve, timer))
+}
+
 async function main() {
   if (!checkUndefinedArguments(argv.user)) return
   if (!checkUndefinedArguments(argv.password)) return
+  if (!checkUndefinedArguments(argv.register)) return
 
-  const poId = 'a468a6cd-9409-4943-a46a-80cedc4fd528'
+  const poId = argv.register
 
   const poRes = await fetch(`http://localhost:8081/api/planning-objects/${poId}`, {
     user: argv.user,
@@ -44,10 +49,8 @@ async function main() {
         'x-updates-session': sessionId
       },
     })
-
+    await delay(1000)
     console.log(await pollingRes.json())
-
-    await new Promise((resolve) => setTimeout(resolve, 1000))
   }
 }
 
