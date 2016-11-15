@@ -4,7 +4,6 @@ const fetch = require('./auth-fetch')
 
 function checkUndefinedArguments(argument) {
   if (typeof argument !== 'string') return false
-
   return true
 }
 
@@ -30,27 +29,11 @@ async function main() {
   let pollingBody = {}
   pollingBody[poId] = cas
 
-  const pollingRes = await fetch('http://localhost:8081/api/planning-objects/updates', {
-    user: argv.user,
-    password: argv.password,
-    method: 'POST',
-    body: JSON.stringify(pollingBody),
-    headers: {'Content-Type': 'application/json'},
-  })
-
+  const pollingRes = await pollForPoUpdate(pollingBody)
   const sessionId = pollingRes.headers.raw()['x-updates-session']
 
   while (true) {
-    const pollingRes = await fetch('http://localhost:8081/api/planning-objects/updates', {
-      user: argv.user,
-      password: argv.password,
-      method: 'POST',
-      body: JSON.stringify(pollingBody),
-      headers: {
-        'Content-Type': 'application/json',
-        'x-updates-session': sessionId
-      },
-    })
+    const pollingRes = await pollForPoUpdate(pollingBody, sessionId)
 
     const updatedPos = await pollingRes.json()
     if (updatedPos.length === 1) {
@@ -62,6 +45,21 @@ async function main() {
 
     await delay(1000)
   }
+}
+
+function pollForPoUpdate(pollingBody, sessionId) {
+  headers = {
+    'Content-Type': 'application/json'
+  }
+  if (sessionId !== undefined) headers['x-updates-session'] = sessionId
+
+  return fetch('http://localhost:8081/api/planning-objects/updates', {
+    user: argv.user,
+    password: argv.password,
+    method: 'POST',
+    body: JSON.stringify(pollingBody),
+    headers: headers,
+  })
 }
 
 async function triggerPoChangedEvent(ifttt, name) {
