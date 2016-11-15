@@ -16,7 +16,7 @@ async function main() {
   if (!checkUndefinedArguments(argv.password)) return
   if (!checkUndefinedArguments(argv.register)) return
   if (!checkUndefinedArguments(argv.ifttt)) return
-  
+
   const poId = argv.register
   console.log(`Start ifttt connector for planning object (poId: ${poId})`)
 
@@ -29,11 +29,11 @@ async function main() {
   let pollingBody = {}
   pollingBody[poId] = cas
 
-  const pollingRes = await pollForPoUpdate(pollingBody)
+  const pollingRes = await getUpdatedPos(pollingBody)
   const sessionId = pollingRes.headers.raw()['x-updates-session']
 
   while (true) {
-    const pollingRes = await pollForPoUpdate(pollingBody, sessionId)
+    const pollingRes = await getUpdatedPos(pollingBody, sessionId)
 
     const updatedPos = await pollingRes.json()
     if (updatedPos.length === 1) {
@@ -47,7 +47,7 @@ async function main() {
   }
 }
 
-function pollForPoUpdate(pollingBody, sessionId) {
+function getUpdatedPos(pollingBody, sessionId) {
   headers = {
     'Content-Type': 'application/json'
   }
