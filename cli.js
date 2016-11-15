@@ -16,7 +16,7 @@ async function main() {
   if (!checkUndefinedArguments(argv.user)) return
   if (!checkUndefinedArguments(argv.password)) return
   if (!checkUndefinedArguments(argv.register)) return
-  if (!checkUndefinedArguments(argv.iftttKey)) return
+  if (!checkUndefinedArguments(argv.ifttt)) return
   
   const poId = argv.register
 
@@ -74,7 +74,7 @@ async function triggerPoChangedEvent(name) {
     },
     body: JSON.stringify(param),
   }
-  console.log('send poChanged event')
+
   const url = `https://maker.ifttt.com/trigger/poChanged/with/key/${argv.ifttt}`
   const response = await fetch(url, options)
   if(response.statusCode >= 200 || response.statusCode < 300) {
