@@ -38,7 +38,6 @@ function triggerProjectViolated (updatedPos) {
       notifyProjectViolated(po.name)
     }
   }
-
 }
 
 async function main() {
@@ -70,9 +69,9 @@ async function main() {
     if (updatedPos.length === 1) {
       pollingBody[poId] = updatedPos[0].cas
 
-      if(argv.trigger === 'PoChanged') {
+      if(argv.trigger === 'poChanged') {
         triggerPoChanged(updatedPos)
-      } else if (argv.trigger === 'ProjectViolated') {
+      } else if (argv.trigger === 'projectViolated') {
         triggerProjectViolated(updatedPos)
       }
     }
@@ -95,7 +94,6 @@ function getUpdatedPos(pollingBody, sessionId) {
     headers: headers,
   })
 }
-
 
 function notifyPoChanged (name) {
   const options = {
@@ -132,7 +130,7 @@ async function notifyIFTTT(token, options) {
     console.log(`Sending event was not successful: "${await response.text()}"`)
   }
   else {
-    console.log('Success! Notified IFTTT with ', options.eventName)
+    console.log('Success! Notified IFTTT with', options.eventName)
   }
 }
 
