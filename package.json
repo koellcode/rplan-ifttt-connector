@@ -1,0 +1,25 @@
+{
+  "name": "rplan-ifttt-connector",
+  "version": "0.0.1",
+  "description": "connects rplan.com with ifttt",
+  "main": "cli.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/koellcode/rplan-ifttt-connector.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/koellcode/rplan-ifttt-connector/issues"
+  },
+  "homepage": "https://github.com/koellcode/rplan-ifttt-connector#readme",
+  "devDependencies": {},
+  "dependencies": {
+    "basic-auth-header": "^1.0.1",
+    "minimist": "^1.2.0",
+    "node-fetch": "^1.6.3"
+  }
+}
