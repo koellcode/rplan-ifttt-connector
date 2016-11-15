@@ -54,6 +54,25 @@ async function main() {
   }
 }
 
+async function triggerPoChangedEvent(po) {
+  const param = {
+    value1: po.name,
+  }
+  const options = {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(param),
+  }
+  console.log('send poChanged event')
+  const url = 'https://maker.ifttt.com/trigger/poChanged/with/key/bLWm4fLBFvpmeyFpr8h-EN'
+  const response = await fetch(url, options)
+  if(response.statusCode >= 200 || response.statusCode < 300) {
+    console.log(`sending event was not successful: "${await response.text()}"`)
+  } else console.log('Success!')
+}
+
 main().then(() => {
   console.log('end')
 })
