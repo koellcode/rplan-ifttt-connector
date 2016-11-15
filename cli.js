@@ -40,7 +40,7 @@ async function main() {
       pollingBody[poId] = updatedPos[0].cas
 
       console.log('Trigger ifttt...')
-      await triggerPoChangedEvent(argv.ifttt, updatedPos[0].name)
+      triggerPoChangedEvent(argv.ifttt, updatedPos[0].name)
     }
 
     await delay(1000)
