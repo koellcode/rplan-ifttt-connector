@@ -16,7 +16,8 @@ async function main() {
   if (!checkUndefinedArguments(argv.user)) return
   if (!checkUndefinedArguments(argv.password)) return
   if (!checkUndefinedArguments(argv.register)) return
-
+  if (!checkUndefinedArguments(argv.iftttKey)) return
+  
   const poId = argv.register
 
   const poRes = await fetch(`http://localhost:8081/api/planning-objects/${poId}`, {
@@ -62,9 +63,9 @@ async function main() {
   }
 }
 
-async function triggerPoChangedEvent(po) {
+async function triggerPoChangedEvent(name) {
   const param = {
-    value1: po.name,
+    value1: name,
   }
   const options = {
     method: 'POST',
@@ -74,7 +75,7 @@ async function triggerPoChangedEvent(po) {
     body: JSON.stringify(param),
   }
   console.log('send poChanged event')
-  const url = 'https://maker.ifttt.com/trigger/poChanged/with/key/bLWm4fLBFvpmeyFpr8h-EN'
+  const url = `https://maker.ifttt.com/trigger/poChanged/with/key/${argv.ifttt}`
   const response = await fetch(url, options)
   if(response.statusCode >= 200 || response.statusCode < 300) {
     console.log(`sending event was not successful: "${await response.text()}"`)
