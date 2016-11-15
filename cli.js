@@ -12,11 +12,43 @@ async function main() {
   if (!checkUndefinedArguments(argv.user)) return
   if (!checkUndefinedArguments(argv.password)) return
 
-  const response = await fetch('http://localhost:8081/api/planning-objects/3c814426-a136-424c-ad91-1b40fd6f48c0', {
+  const poId = 'a468a6cd-9409-4943-a46a-80cedc4fd528'
+
+  const poRes = await fetch(`http://localhost:8081/api/planning-objects/${poId}`, {
     user: argv.user,
     password: argv.password,
   })
-  console.log(await response.text())
+  const {cas} = await poRes.json()
+
+  let pollingBody = {}
+  pollingBody[poId] = cas
+
+  const pollingRes = await fetch('http://localhost:8081/api/planning-objects/updates', {
+    user: argv.user,
+    password: argv.password,
+    method: 'POST',
+    body: JSON.stringify(pollingBody),
+    headers: {'Content-Type': 'application/json'},
+  })
+
+  const sessionId = pollingRes.headers.raw()['x-updates-session']
+
+  while (true) {
+    const pollingRes = await fetch('http://localhost:8081/api/planning-objects/updates', {
+      user: argv.user,
+      password: argv.password,
+      method: 'POST',
+      body: JSON.stringify(pollingBody),
+      headers: {
+        'Content-Type': 'application/json',
+        'x-updates-session': sessionId
+      },
+    })
+
+    console.log(await pollingRes.json())
+
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+  }
 }
 
 main().then(() => {
